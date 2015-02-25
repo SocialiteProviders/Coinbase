@@ -12,7 +12,9 @@ class Provider extends AbstractProvider implements ProviderInterface
      */
     protected function getAuthUrl($state)
     {
-        return $this->buildAuthUrlFromBase('https://www.coinbase.com/oauth/authorize', $state);
+        return $this->buildAuthUrlFromBase(
+            'https://www.coinbase.com/oauth/authorize', $state
+        );
     }
 
     /**
@@ -28,7 +30,8 @@ class Provider extends AbstractProvider implements ProviderInterface
      */
     protected function getUserByToken($token)
     {
-        $response = $this->getHttpClient()->get('https://api.coinbase.com/v1/users/self', [
+        $response = $this->getHttpClient()->get(
+            'https://api.coinbase.com/v1/users/self', [
             'headers' => [
                 'Authorization' => 'Bearer '.$token,
             ],
@@ -43,11 +46,8 @@ class Provider extends AbstractProvider implements ProviderInterface
     protected function mapUserToObject(array $user)
     {
         return (new User())->setRaw($user)->map([
-            'id'       => $user['user']['id'],
-            'nickname' => $user['user']['username'],
-            'name'     => null,
-            'email'    => $user['user']['email'],
-            'avatar'   => null,
+            'id' => $user['user']['id'], 'nickname' => $user['user']['username'],
+            'name' => null, 'email' => $user['user']['email'], 'avatar' => null,
         ]);
     }
 
@@ -56,6 +56,8 @@ class Provider extends AbstractProvider implements ProviderInterface
      */
     protected function getTokenFields($code)
     {
-        return array_merge(parent::getTokenFields($code), ['grant_type' => 'authorization_code']);
+        return array_merge(parent::getTokenFields($code), [
+            'grant_type' => 'authorization_code',
+        ]);
     }
 }
