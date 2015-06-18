@@ -1,4 +1,5 @@
 <?php
+
 namespace SocialiteProviders\Coinbase;
 
 use SocialiteProviders\Manager\SocialiteWasCalled;
