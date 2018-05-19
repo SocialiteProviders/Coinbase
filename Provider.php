@@ -2,9 +2,9 @@
 
 namespace SocialiteProviders\Coinbase;
 
+use SocialiteProviders\Manager\OAuth2\User;
 use Laravel\Socialite\Two\ProviderInterface;
 use SocialiteProviders\Manager\OAuth2\AbstractProvider;
-use SocialiteProviders\Manager\OAuth2\User;
 
 class Provider extends AbstractProvider implements ProviderInterface
 {
@@ -26,6 +26,19 @@ class Provider extends AbstractProvider implements ProviderInterface
     /**
      * {@inheritdoc}
      */
+    protected function getCodeFields($state = null)
+    {
+        $time = time();
+        return array_merge(parent::getCodeFields($state), [
+            'CB-ACCESS-SIGN' => hash_hmac( 'sha256', $time.'GET'.'oauth/authorize', $this->clientSecret ),
+            'CB-VERSION' => '2017-08-07',
+            'CB-ACCESS-TIMESTAMP' => $time
+        ]);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     protected function getTokenUrl()
     {
         return 'https://www.coinbase.com/oauth/token';
@@ -36,10 +49,14 @@ class Provider extends AbstractProvider implements ProviderInterface
      */
     protected function getUserByToken($token)
     {
+        $time = time();
         $response = $this->getHttpClient()->get(
-            'https://api.coinbase.com/v1/users/self', [
+            'https://api.coinbase.com/v2/user', [
             'headers' => [
                 'Authorization' => 'Bearer '.$token,
+                'CB-ACCESS-SIGN' => hash_hmac( 'sha256', $time.'GET'.'v2/user', $this->clientSecret ),
+                'CB-VERSION' => '2017-08-07',
+                'CB-ACCESS-TIMESTAMP' => $time
             ],
         ]);
 
@@ -52,8 +69,8 @@ class Provider extends AbstractProvider implements ProviderInterface
     protected function mapUserToObject(array $user)
     {
         return (new User())->setRaw($user)->map([
-            'id'   => $user['user']['id'], 'nickname' => $user['user']['username'],
-            'name' => null, 'email' => $user['user']['email'], 'avatar' => null,
+            'id' => $user['data']['id'], 'nickname' => @$user['data']['username'],
+            'name' => @$user['data']['name'], 'email' => @$user['data']['email'], 'avatar' => @$user['data']['avatar'],
         ]);
     }
 
